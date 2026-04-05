@@ -36,10 +36,23 @@ The core relies on a highly decoupled Web Application architecture leveraging OS
 
 ## 🚀 Installation & Usage
 
-You can launch a new shared interactive terminal instance anywhere on your OS globally!
+> **Note:** The official NPM repository package is currently down/unavailable for the time being. Please use the Git Clone method below to install and run the tool locally.
 
-### 1. Execute the Package
-If installed locally via NPM routing, simply execute the shortcut:
+### 1. Manual Git Clone
+First, clone the repository and install all required framework dependencies:
+```bash
+git clone https://github.com/your-username/tele-terminal.git
+cd tele-terminal
+npm install
+```
+
+Then, link the package globally so your OS recognizes it as a native command:
+```bash
+npm link
+```
+
+### 2. Execute the Package
+Once installed or linked, simply type the executable shortcut in any terminal on your system:
 ```bash
 tshare
 ```
