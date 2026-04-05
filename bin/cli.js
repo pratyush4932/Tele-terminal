@@ -3,7 +3,7 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import boxen from 'boxen';
-import { startServer, setApprovalCallback } from '../index.js';
+import { startServer, setApprovalCallback } from '../src/index.js';
 import os from 'os';
 import fs from 'fs';
 import { join } from 'path';

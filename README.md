@@ -30,8 +30,8 @@ Tele-Terminal transforms your local command-line interface into a real-time, bro
 ## 🏗 System Architecture
 
 1. **The Orchestrator (`bin/cli.js`):** An intuitive TUI wizard powered by `inquirer` that prompts the host for execution variables, mandates the config parser structure, verifies passwords, and holds the active `Host Approval` loop.
-2. **The Backend (`index.js`):** The beating heart. Instantiates `node-pty` into an OS-bound shell (`powershell.exe` for Windows, `bash` natively). Applies RBAC policies natively over multiplexed Socket.IO signals before committing standard bytes natively into the backend streams.
-3. **The Frontend (`index.html`):** Renders the payload utilizing `xterm.js`. Beautiful UI overhauls including Native Glassmorphism login modals and floating red Security Toasts to notify active authenticated connections when anomalous keystrokes are ripped away.
+2. **The Backend (`src/index.js`):** The beating heart. Instantiates `node-pty` into an OS-bound shell (`powershell.exe` for Windows, `bash` natively). Applies RBAC policies natively over multiplexed Socket.IO signals before committing standard bytes natively into the backend streams.
+3. **The Frontend (`src/index.html`):** Renders the payload utilizing `xterm.js`. Beautiful UI overhauls including Native Glassmorphism login modals and floating red Security Toasts to notify active authenticated connections when anomalous keystrokes are ripped away.
 
 ---
 

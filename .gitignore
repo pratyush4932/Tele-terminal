@@ -55,3 +55,7 @@ jspm_packages/
 
 # Windows hidden files
 Thumbs.db
+
+# Tele-Terminal Security Configs
+config.json
+package-lock.json
