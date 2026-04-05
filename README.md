@@ -1,8 +1,8 @@
 # ☁️ Tele-Terminal
 
-> A beautiful, high-performance, synchronized cross-platform shared web terminal.
+> A secure, role-based, real-time shared web multiplexing terminal interface.
 
-Tele-Terminal transforms your local command-line interface into a real-time, browser-accessible multiplexed session. By generating a private network daemon, securely authenticated users can remotely execute commands, jump into a persistent interactive shell history, and collaborate synchronously within the exact same pseudo-terminal (PTY) environment natively inside their browsers.
+Tele-Terminal transforms your local command-line interface into a real-time, browser-accessible multiplexed session. By generating a private network daemon, authenticated users can collaboratively jump into a persistent interactive shell history natively inside their browsers, complete with **Role-Based Access Control (RBAC)**, strictly partitioned directory sandboxes, and manual host connection approval mechanisms.
 
 ---
 
@@ -16,27 +16,26 @@ Tele-Terminal transforms your local command-line interface into a real-time, bro
 
 ## 🔥 Features Summary
 
-- **Real-Time Multiplexing (Matrix Sockets):** Utilizes `Socket.IO` to stream raw PTY byte buffers to `n`-concurrent clients with near-zero latency.
-- **PTY Dimension Synchronization:** Solves traditional web-shell visual tearing. Automatically intercepts frontend viewport dimensions and synchronizes the backend VT100 physical wrapper matrix dynamically.
-- **Keystroke Buffering & Attribution:** Features a high-fidelity algorithmic parser to track user-execution telemetry (discarding strict ANSI sequences) to power a live, responsive chat-style **Command History Modal**.
-- **Aesthetic Excellence:** Completely overhauls standard UI using native CSS glassmorphism, animated macro-blobs, and OS-agnostic macOS-style framing over a customized `xterm.js` canvas.
-- **Strict Session Context:** Engineered to aggressively drop ghosted clients. A disconnect listener forces an immediate Local-Storage purge, returning dead sessions instantly back to the authentication gateway. 
+- **Role-Based Access Control (RBAC):** Supports 3 unique tiers of execution:
+  - **Admin:** Has global, unrestricted bypassing rights directly mapped via `config.json`.
+  - **Standard User:** Inherently subjected to strict command blocklists, OS-specific keyword restrictions, and trapped rigidly inside a directory sandbox. Passed dynamically via the TUI.
+  - **Guest:** Hardcoded view-only mode. Input sequences are completely discarded before hitting the PTY stream. 
+- **Global Directory Sandbox:** Uses intelligent regex payload mapping to permanently lock users into the specific directory where the command was executed, aggressively shredding absolute path manipulation (e.g. `cd C:\`) and parent traversals (e.g. `cd ..`) for all users natively.
+- **Keystroke Application Firewalls:** Keystroke buffer telemetry scans each active buffer context *before* executing `.includes()` logic, intercepting commands like `rm -rf` globally based on what OS the host is currently using. Throws visual front-end toast notifications if trapped.
+- **Manual Host Approval Gatekeeper:** The central CLI natively intercepts connection streams natively using `inquirer`, rendering a giant `Y/n` prompt natively on the host's physical machine giving them true physical override capacities over incoming sessions.
+- **Strict Password Integrity:** Actively rejects configuration settings during server spinup that fail to utilize complex hashing paradigms (8 Chars + Lowercase + Uppercase + Special Character).
 
 ---
 
 ## 🏗 System Architecture
 
-The core relies on a highly decoupled Web Application architecture leveraging OS-native streams directly piped into WebSockets:
-
-1. **The Orchestrator (`bin/cli.js`):** An intuitive TUI wizard powered by `inquirer` that prompts the host for execution variables (binding port, secure password shell).
-2. **The Backend (`index.js`):** Uses `node-pty` to spawn an underlying OS-bound shell (`powershell.exe` for Windows, `bash` natively). It aggregates `stdout` and multicasts physical outputs sequentially into the `authenticated` Socket.IO websocket room.
-3. **The Frontend (`index.html`):** Renders the payload utilizing `xterm.js` combined with standard CSS. Upstream inputs are dynamically dispatched, with terminal resizing actions triggering bidirectional backend layout reconciliation.
+1. **The Orchestrator (`bin/cli.js`):** An intuitive TUI wizard powered by `inquirer` that prompts the host for execution variables, mandates the config parser structure, verifies passwords, and holds the active `Host Approval` loop.
+2. **The Backend (`index.js`):** The beating heart. Instantiates `node-pty` into an OS-bound shell (`powershell.exe` for Windows, `bash` natively). Applies RBAC policies natively over multiplexed Socket.IO signals before committing standard bytes natively into the backend streams.
+3. **The Frontend (`index.html`):** Renders the payload utilizing `xterm.js`. Beautiful UI overhauls including Native Glassmorphism login modals and floating red Security Toasts to notify active authenticated connections when anomalous keystrokes are ripped away.
 
 ---
 
 ## 🚀 Installation & Usage
-
-> **Note:** The official NPM repository package is currently down/unavailable for the time being. Please use the Git Clone method below to install and run the tool locally.
 
 ### 1. Manual Git Clone
 First, clone the repository and install all required framework dependencies:
@@ -51,19 +50,14 @@ Then, link the package globally so your OS recognizes it as a native command:
 npm link
 ```
 
-### 2. Execute the Package
-Once installed or linked, simply type the executable shortcut in any terminal on your system:
+### 2. Configure Your Session
+Tele-Terminal natively relies upon a persistent `config.json` block for mapping global users. 
+
+**For full configuration steps, please check out the [CONFIG_GUIDE.md](./CONFIG_GUIDE.md).**
+
+Once you have your passwords sorted, execute the package natively:
 ```bash
 tshare
-```
-
-### 2. Configure Your Session
-The internal wizard will sequentially command your OS to initialize:
-```bash
-☁️  Welcome to Tele-Terminal Setup ☁️
-
-? Create a secure password for this web shell session: ********
-? What port should the server bind to? 3000
 ```
 
 ### 3. Connect Locally
@@ -87,7 +81,7 @@ ngrok http 3000
 ```
 
 **3. Share the Forwarding URL!**
-Ngrok will generate a secure URL (e.g. `https://1a2b-3c4d.ngrok.app`). Share this URL and your created password with your colleagues. They can now enter your local shell seamlessly through their browser! 
+Ngrok will generate a secure URL (e.g. `https://1a2b-3c4d.ngrok.app`). Share this URL and your created passwords with your colleagues. They can now enter your local shell seamlessly through their browser! 
 
 ---
 
@@ -96,6 +90,6 @@ Ngrok will generate a secure URL (e.g. `https://1a2b-3c4d.ngrok.app`). Share thi
 **Use at your own risk.** 
 
 Tele-Terminal provides **direct, authenticated pseudo-terminal access** to the host machine’s actual OS user account. Any user with the password controls the machine with your application's current disk/system elevation rights. 
-- Do **not** deploy this on public, untrusted domain spheres without proper secondary network guardrails (firewalls, rate mitigations).
+- Do **not** deploy this on public, untrusted domain spheres without proper secondary network guardrails (firewalls, rate mitigations) or strictly locking down `config.json`.
 - Be mindful of reverse tunneling (Ngrok, Cloudflare) bypassing standard NAT securities. 
-- Once a session executes `rm -rf /` or malicious actions, the changes to the host OS are immediate and permanent.
+- Ensure that the TUI Host Approval system remains checked enabled (`Y`) natively inside the terminal if operating over raw public networks.

@@ -1,0 +1,43 @@
+{
+  "users": {
+    "admin": {
+      "username": "superadmin",
+      "password": "SuperSecureAdminPassword2026!"
+    },
+    "guest": {
+      "username": "guestviewer",
+      "password": "ReadOnlyGuestPass!2026"
+    }
+  },
+  "security": {
+    "require_approval": true,
+    "restricted_cmds": {
+      "windows": [
+        "del /s",
+        "format",
+        "shutdown",
+        "rmdir /s",
+        "diskpart"
+      ],
+      "linux": [
+        "rm -rf",
+        "mkfs",
+        "shutdown",
+        "reboot",
+        "dd"
+      ],
+      "mac": [
+        "rm -rf",
+        "mkfs",
+        "shutdown",
+        "reboot",
+        "sudo rm"
+      ]
+    },
+    "allowed_cmds": {
+      "windows": [],
+      "linux": [],
+      "mac": []
+    }
+  }
+}
