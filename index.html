@@ -518,7 +518,7 @@
                     appContainer.classList.add('visible');
                     setTimeout(doFit, 300);
                 }, 400);
-            } else if (strData.includes('Access Denied: Incorrect Password')) {
+            } else if (strData.includes('Access Denied:')) {
                 passwordInput.disabled = false;
                 usernameInput.disabled = false;
                 passwordInput.value = '';

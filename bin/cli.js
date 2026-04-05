@@ -15,7 +15,13 @@ async function run() {
             name: 'sessionPassword',
             message: 'Create a secure password for this web shell session:',
             mask: '*',
-            validate: (input) => input.length >= 3 ? true : 'Password must be at least 3 characters long.'
+            validate: (input) => {
+                if (input.length < 8) return 'Password must be at least 8 characters long.';
+                if (!/[A-Z]/.test(input)) return 'Password must contain at least one uppercase letter.';
+                if (!/[a-z]/.test(input)) return 'Password must contain at least one lowercase letter.';
+                if (!/[^A-Za-z0-9]/.test(input)) return 'Password must contain at least one special character.';
+                return true;
+            }
         },
         {
             type: 'input',

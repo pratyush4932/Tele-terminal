@@ -32,6 +32,7 @@ const io = new Server(server, {
 
 const MAX_HISTORY = 100;
 const commandHistory = [];
+const activeUsers = new Set();
 
 let sharedShell = null;
 
@@ -62,14 +63,19 @@ io.on('connection', (socket) => {
     let authenticated = false;
 
     socket.on('auth', (data) => {
-        if (data.password === sessionPassword) {
+        const attemptedUsername = data.username || 'Anonymous';
+        
+        if (data.password !== sessionPassword) {
+            socket.emit('output', '\r\n\x1b[31mAccess Denied: Incorrect Password\x1b[0m\r\n');
+        } else if (activeUsers.has(attemptedUsername)) {
+            socket.emit('output', `\r\n\x1b[31mAccess Denied: Username '${attemptedUsername}' is already taken in this session.\x1b[0m\r\n`);
+        } else {
             authenticated = true;
-            socket.username = data.username || 'Anonymous';
+            socket.username = attemptedUsername;
+            activeUsers.add(socket.username);
             socket.join('authenticated');
             initSharedShell();
             socket.emit('output', '\r\n\x1b[32mConnected to shared terminal...\x1b[0m\r\n');
-        } else {
-            socket.emit('output', '\r\n\x1b[31mAccess Denied: Incorrect Password\x1b[0m\r\n');
         }
     });
 
@@ -116,6 +122,9 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
+        if (socket.username) {
+            activeUsers.delete(socket.username);
+        }
     });
 });
 
