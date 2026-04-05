@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Terminal</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d0f14;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        .blob1 {
+            width: 450px;
+            height: 450px;
+            background: rgba(102, 126, 234, 0.7);
+            top: -100px;
+            left: -100px;
+            animation: move 14s infinite alternate ease-in-out;
+        }
+
+        .blob2 {
+            width: 550px;
+            height: 550px;
+            background: rgba(118, 75, 162, 0.7);
+            bottom: -150px;
+            right: -100px;
+            animation: move-reverse 18s infinite alternate ease-in-out;
+        }
+
+        @keyframes move {
+            from {
+                transform: translate(0, 0) scale(1);
+            }
+
+            to {
+                transform: translate(150px, 150px) scale(1.2);
+            }
+        }
+
+        @keyframes move-reverse {
+            from {
+                transform: translate(0, 0) scale(1.2);
+            }
+
+            to {
+                transform: translate(-150px, -150px) scale(1);
+            }
+        }
+
+        #login-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(13, 15, 20, 0.4);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            transition: opacity 0.4s ease, visibility 0.4s;
+        }
+
+        .modal-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            width: 340px;
+            transform: translateY(0);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-card.hidden {
+            transform: translateY(-20px) scale(0.95);
+        }
+
+        .modal-card h2 {
+            margin-bottom: 24px;
+            font-weight: 500;
+            font-size: 22px;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #fff 0%, #a5a5a5 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-card input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            outline: none;
+            margin-bottom: 20px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-card input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-card button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+        }
+
+        .modal-card button:hover {
+            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .modal-card button:active {
+            transform: translateY(0);
+        }
+
+        #app-container {
+            width: 100vw;
+            max-width: none;
+            height: 100vh;
+            background: #111111;
+            border-radius: 0;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(30px) scale(0.98);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #app-container.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .window-header {
+            height: 44px;
+            background: #18191c;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            user-select: none;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transition: opacity 0.2s;
+        }
+
+        .window-controls:hover .control-dot {
+            opacity: 0.8;
+        }
+
+        .dot-close {
+            background: #ff5f56;
+        }
+
+        .dot-min {
+            background: #ffbd2e;
+        }
+
+        .dot-max {
+            background: #27c93f;
+        }
+
+        .window-title {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 13px;
+            color: #888;
+            font-weight: 500;
+            margin-right: 56px;
+            letter-spacing: 0.5px;
+        }
+
+        #terminal-container {
+            flex-grow: 1;
+            padding: 16px 16px 16px 20px;
+            background: #111111;
+            overflow: hidden;
+        }
+
+        .xterm-viewport {
+            border-radius: 0;
+        }
+
+        .header-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: absolute;
+            right: 16px;
+        }
+
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        #history-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(13, 15, 20, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+
+        #history-modal.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .history-card {
+            background: rgba(25, 25, 30, 0.95);
+            width: 500px;
+            max-width: 90%;
+            height: 65vh;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(1);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #history-modal.hidden .history-card {
+            transform: scale(0.95);
+        }
+
+        .history-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .history-header h3 {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .history-header button {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .history-header button:hover {
+            color: #fff;
+        }
+
+        #history-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 12px 0;
+        }
+
+        .history-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .history-meta {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .history-cmd {
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            color: #50FA7B;
+            word-break: break-all;
+        }
+
+        #activity-log {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .activity-toast {
+            background: rgba(30, 30, 30, 0.8);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #8be9fd;
+            animation: slideIn 0.3s ease-out forwards, fadeOut 0.5s ease-in 3.5s forwards;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            font-family: 'Inter', sans-serif;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+    <div id="login-modal">
+        <div class="modal-card" id="modal-card">
+            <h2>Sign In to Terminal</h2>
+            <form id="login-form">
+                <input type="text" id="username-input" placeholder="Enter your name" required />
+                <input type="password" id="password-input" placeholder="Enter session password" required />
+                <button type="submit">Establish Connection</button>
+            </form>
+        </div>
+    </div>
+    <div id="history-modal" class="hidden">
+        <div class="history-card">
+            <div class="history-header">
+                <h3>Command History</h3>
+                <button id="close-history-btn" title="Close">&times;</button>
+            </div>
+            <div id="history-list"></div>
+        </div>
+    </div>
+    <div id="app-container">
+        <div class="window-header">
+            <div class="window-controls">
+                <div class="control-dot dot-close"></div>
+                <div class="control-dot dot-min"></div>
+                <div class="control-dot dot-max"></div>
+            </div>
+            <div class="window-title">Shared Terminal Session — bash</div>
+            <button id="history-btn" class="header-btn" title="Command History">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="terminal-container"></div>
+    </div>
+    <script>
+        const modal = document.getElementById('login-modal');
+        const modalCard = document.getElementById('modal-card');
+        const loginForm = document.getElementById('login-form');
+        const usernameInput = document.getElementById('username-input');
+        const passwordInput = document.getElementById('password-input');
+        const appContainer = document.getElementById('app-container');
+        const terminalContainer = document.getElementById('terminal-container');
+        const term = new Terminal({
+            cursorBlink: true,
+            theme: {
+                background: '#111111',
+                foreground: '#f8f8f2',
+                cursor: '#667eea',
+                cursorAccent: '#111111',
+                selection: 'rgba(255, 255, 255, 0.1)',
+                black: '#21222C',
+                red: '#FF5555',
+                green: '#50FA7B',
+                yellow: '#F1FA8C',
+                blue: '#BD93F9',
+                magenta: '#FF79C6',
+                cyan: '#8BE9FD',
+                white: '#F8F8F2'
+            },
+            fontFamily: "'Fira Code', 'Courier New', monospace",
+            fontSize: 15,
+            lineHeight: 1.3,
+            fontWeight: 400
+        });
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+        const socket = io();
+        term.open(terminalContainer);
+        function doFit() {
+            try {
+                fitAddon.fit();
+                socket.emit('resize', { cols: term.cols, rows: term.rows });
+            } catch (e) {
+                console.warn('Fit error:', e);
+            }
+        }
+        setTimeout(doFit, 100);
+        window.addEventListener('resize', doFit);
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pass = passwordInput.value;
+            const user = usernameInput.value;
+            try {
+                term.write('\x1b[36mAuthenticating...\x1b[0m\r\n');
+            } catch (e) { }
+            socket.emit('auth', { password: pass, username: user });
+            passwordInput.disabled = true;
+            usernameInput.disabled = true;
+        });
+        socket.on('output', (data) => {
+            let strData = '';
+            try {
+                strData = typeof data === 'string' ? data : new TextDecoder().decode(data);
+            } catch (e) {
+                strData = String(data);
+            }
+            if (strData.includes('Connected to shared terminal')) {
+                modal.style.opacity = '0';
+                modalCard.classList.add('hidden');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    appContainer.classList.add('visible');
+                    setTimeout(doFit, 300);
+                }, 400);
+            } else if (strData.includes('Access Denied: Incorrect Password')) {
+                passwordInput.disabled = false;
+                usernameInput.disabled = false;
+                passwordInput.value = '';
+                passwordInput.focus();
+                modalCard.style.transform = 'translateY(0) translateX(-5px)';
+                setTimeout(() => modalCard.style.transform = 'translateY(0) translateX(5px)', 100);
+                setTimeout(() => modalCard.style.transform = 'translateY(0) translateX(0)', 200);
+            }
+            try {
+                term.write(data);
+            } catch (e) {
+                term.write(strData);
+            }
+        });
+        term.onData(data => {
+            socket.emit('input', data);
+        });
+        socket.on('user-executed', (username) => {
+            let logBox = document.getElementById('activity-log');
+            if (!logBox) {
+                logBox = document.createElement('div');
+                logBox.id = 'activity-log';
+                document.getElementById('app-container').appendChild(logBox);
+            }
+            const toast = document.createElement('div');
+            toast.className = 'activity-toast';
+            toast.innerText = `⚡ ${username} issued a command`;
+            logBox.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        });
+        const historyBtn = document.getElementById('history-btn');
+        const historyModal = document.getElementById('history-modal');
+        const closeHistoryBtn = document.getElementById('close-history-btn');
+        const historyList = document.getElementById('history-list');
+        historyBtn.addEventListener('click', () => {
+            historyModal.classList.remove('hidden');
+            socket.emit('request-history');
+        });
+        closeHistoryBtn.addEventListener('click', () => {
+            historyModal.classList.add('hidden');
+        });
+        historyModal.addEventListener('click', (e) => {
+            if (e.target === historyModal) historyModal.classList.add('hidden');
+        });
+        socket.on('history-data', (commands) => {
+            historyList.innerHTML = commands.length ? '' : '<div style="padding: 20px; color: #888; text-align: center;">No history available yet.</div>';
+            commands.slice().reverse().forEach(entry => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                const meta = document.createElement('div');
+                meta.className = 'history-meta';
+                const time = new Date(entry.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                meta.innerHTML = `<span><strong style="color:#BD93F9">${entry.user}</strong></span><span>${time}</span>`;
+                const cmd = document.createElement('div');
+                cmd.className = 'history-cmd';
+                cmd.innerText = '> ' + entry.cmd;
+                item.appendChild(meta);
+                item.appendChild(cmd);
+                historyList.appendChild(item);
+            });
+        });
+        socket.on('disconnect', () => {
+            // Force session expiration UI
+            appContainer.classList.remove('visible');
+            modal.style.display = 'flex';
+            modal.style.opacity = '1';
+            modalCard.classList.remove('hidden');
+            passwordInput.disabled = false;
+            usernameInput.disabled = false;
+            passwordInput.value = '';
+            
+            term.clear();
+            term.write('\r\n\x1b[31mServer Connection Terminated. Session Expired.\x1b[0m\r\n');
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "tele-terminal",
+  "version": "1.0.0",
+  "description": "A beautiful cross-os shared terminal over the web",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "tele-terminal": "./bin/cli.js",
+    "tshare": "./bin/cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "boxen": "^8.0.1",
+    "chalk": "^5.6.2",
+    "http": "^0.0.1-security",
+    "inquirer": "^13.3.2",
+    "node-pty": "^1.1.0",
+    "socket.io": "^4.8.3"
+  }
+}
