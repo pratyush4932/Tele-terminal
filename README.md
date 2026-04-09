@@ -52,17 +52,10 @@ Tele-Terminal transforms your local command-line interface into a real-time, bro
 
 ## 🚀 Installation & Usage
 
-### 1. Manual Git Clone
-First, clone the repository and install all required framework dependencies:
+### 1. NPM Installation
+Install the package globally so your OS recognizes it as a native command:
 ```bash
-git clone https://github.com/your-username/tele-terminal.git
-cd tele-terminal
-npm install
-```
-
-Then, link the package globally so your OS recognizes it as a native command:
-```bash
-npm link
+npm install -g @pratyush4932/tele-terminal@latest
 ```
 
 ### 2. Configure Your Session
