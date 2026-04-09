@@ -36,6 +36,29 @@ async function run() {
         console.log(chalk.red.bold(`[WARNING] No config files found!`));
         console.log(chalk.yellow(`Generating a demo config.json layout...`));
         configObj = {
+            port: 3000,
+            max_history: 100,
+            shell: "",
+            ssl_cert: "",
+            ssl_key: "",
+            theme: {
+                background: "#111111",
+                foreground: "#f8f8f2",
+                cursor: "#667eea",
+                cursorAccent: "#111111",
+                selection: "rgba(255, 255, 255, 0.1)",
+                black: "#21222C",
+                red: "#FF5555",
+                green: "#50FA7B",
+                yellow: "#F1FA8C",
+                blue: "#BD93F9",
+                magenta: "#FF79C6",
+                cyan: "#8BE9FD",
+                white: "#F8F8F2"
+            },
+            ui: {
+                title: "Shared Terminal Session"
+            },
             users: {
                 "admin": {
                     "username": "superadmin",
@@ -103,7 +126,7 @@ async function run() {
             type: 'input',
             name: 'port',
             message: 'What port should the server bind to?',
-            default: '3000',
+            default: configObj?.port ? String(configObj.port) : '3000',
             validate: (input) => {
                 const p = parseInt(input);
                 if (isNaN(p) || p <= 0 || p > 65535) return 'Please enter a valid port number (1-65535).';
@@ -114,13 +137,13 @@ async function run() {
             type: 'input',
             name: 'sslCert',
             message: '(Optional) Path to SSL Certificate (.pem/.crt) for HTTPS:',
-            default: ''
+            default: configObj?.ssl_cert || ''
         },
         {
             type: 'input',
             name: 'sslKey',
             message: '(Optional) Path to SSL Private Key (.pem/.key) for HTTPS:',
-            default: '',
+            default: configObj?.ssl_key || '',
             when: (answers) => answers.sslCert !== ''
         }
     ];

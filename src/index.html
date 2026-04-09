@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shared Terminal</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap"
@@ -19,15 +19,21 @@
             padding: 0;
         }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #0d0f14;
-            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             color: #fff;
-            overflow: hidden;
             position: relative;
         }
 
@@ -100,7 +106,8 @@
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.05);
             text-align: center;
-            width: 340px;
+            width: 90%;
+            max-width: 340px;
             transform: translateY(0);
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
@@ -127,7 +134,7 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 10px;
             color: #fff;
-            font-size: 14px;
+            font-size: 16px;
             font-family: 'Inter', sans-serif;
             transition: all 0.3s ease;
             outline: none;
@@ -164,9 +171,8 @@
         }
 
         #app-container {
-            width: 100vw;
-            max-width: none;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             background: #111111;
             border-radius: 0;
             box-shadow: none;
@@ -281,7 +287,7 @@
             transition: opacity 0.3s;
         }
 
-        #history-modal.hidden {
+        #history-modal.hidden, #users-modal.hidden {
             opacity: 0;
             pointer-events: none;
         }
@@ -414,6 +420,94 @@
                 opacity: 0;
             }
         }
+
+        #tab-bar-container {
+            display: none;
+            background: #18191c;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0 8px;
+            align-items: center;
+            overflow-x: auto;
+            flex-shrink: 0;
+            height: 36px;
+        }
+
+        #tab-bar-container.visible {
+            display: flex;
+        }
+
+        .terminal-tab {
+            padding: 8px 16px;
+            color: #888;
+            font-size: 13px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            height: 100%;
+        }
+
+        .terminal-tab:hover {
+            color: #ccc;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .terminal-tab.active {
+            color: #bd93f9;
+            border-bottom-color: #bd93f9;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-close {
+            font-size: 14px;
+            line-height: 1;
+            padding: 2px;
+            border-radius: 4px;
+        }
+        
+        .tab-close:hover {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff5555;
+        }
+
+        .add-tab-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .add-tab-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #toggle-tabs-btn {
+            display: none;
+            right: 52px;
+        }
+
+        #unlock-sandbox-btn {
+            display: none;
+            right: 88px;
+        }
+
+        #users-btn {
+            display: none;
+            right: 124px;
+        }
+
+        #unlock-sandbox-btn.unlocked {
+            color: #ff5555;
+            border-color: #ff5555;
+            background: rgba(255, 85, 85, 0.1);
+        }
     </style>
 </head>
 
@@ -439,6 +533,15 @@
             <div id="history-list"></div>
         </div>
     </div>
+    <div id="users-modal" class="hidden" style="position: absolute; top:0; left:0; right:0; bottom:0; background:rgba(13,15,20,0.6); backdrop-filter:blur(8px); z-index:200; display:flex; justify-content:center; align-items:center; transition:opacity 0.3s;">
+        <div class="history-card">
+            <div class="history-header">
+                <h3>Active Connected Users</h3>
+                <button id="close-users-btn" title="Close" style="background:none; border:none; color:#888; font-size:20px; cursor:pointer;">&times;</button>
+            </div>
+            <div id="users-list" style="flex-grow: 1; overflow-y: auto; padding: 12px 0;"></div>
+        </div>
+    </div>
     <div id="app-container">
         <div class="window-header">
             <div class="window-controls">
@@ -446,13 +549,36 @@
                 <div class="control-dot dot-min"></div>
                 <div class="control-dot dot-max"></div>
             </div>
-            <div class="window-title">Shared Terminal Session — bash</div>
+            <div class="window-title">Shared Terminal Session</div>
+            <button id="toggle-tabs-btn" class="header-btn" title="Toggle Tabs Feature">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                </svg>
+            </button>
+            <button id="unlock-sandbox-btn" class="header-btn" title="Unlock Sandbox">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+                </svg>
+            </button>
+            <button id="users-btn" class="header-btn" title="Active Users">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </button>
             <button id="history-btn" class="header-btn" title="Command History">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
             </button>
+        </div>
+        <div id="tab-bar-container">
+            <div id="tabs-list" style="display:flex;"></div>
+            <button id="add-tab-btn" class="add-tab-btn" title="New Tab">+</button>
         </div>
         <div id="terminal-container"></div>
     </div>
@@ -464,46 +590,273 @@
         const passwordInput = document.getElementById('password-input');
         const appContainer = document.getElementById('app-container');
         const terminalContainer = document.getElementById('terminal-container');
-        const term = new Terminal({
-            cursorBlink: true,
-            theme: {
-                background: '#111111',
-                foreground: '#f8f8f2',
-                cursor: '#667eea',
-                cursorAccent: '#111111',
-                selection: 'rgba(255, 255, 255, 0.1)',
-                black: '#21222C',
-                red: '#FF5555',
-                green: '#50FA7B',
-                yellow: '#F1FA8C',
-                blue: '#BD93F9',
-                magenta: '#FF79C6',
-                cyan: '#8BE9FD',
-                white: '#F8F8F2'
-            },
-            fontFamily: "'Fira Code', 'Courier New', monospace",
-            fontSize: 15,
-            lineHeight: 1.3,
-            fontWeight: 400
-        });
-        const fitAddon = new FitAddon.FitAddon();
-        term.loadAddon(fitAddon);
+        const terminals = {};
+        let activeTabId = 'main';
+        let userRole = 'guest';
+
+        window.appTheme = null;
+        window.appUI = null;
+
         const socket = io();
-        term.open(terminalContainer);
+        
+        socket.on('init-config', (config) => {
+            if (config.theme) {
+                window.appTheme = config.theme;
+                Object.values(terminals).forEach(obj => {
+                    if (obj.term) obj.term.options.theme = window.appTheme;
+                });
+            }
+            if (config.ui) {
+                window.appUI = config.ui;
+                if (window.appUI.title) {
+                    const titleEl = document.querySelector('.window-title');
+                    if (titleEl) titleEl.innerText = window.appUI.title;
+                }
+            }
+        });
+        
+        function initTerminal(tabId) {
+            if (terminals[tabId]) return terminals[tabId].term;
+
+            const termDiv = document.createElement('div');
+            termDiv.style.width = '100%';
+            termDiv.style.height = '100%';
+            if (tabId !== activeTabId) termDiv.style.display = 'none';
+            terminalContainer.appendChild(termDiv);
+
+            const term = new Terminal({
+                cursorBlink: true,
+                theme: window.appTheme || {
+                    background: '#111111',
+                    foreground: '#f8f8f2',
+                    cursor: '#667eea',
+                    cursorAccent: '#111111',
+                    selection: 'rgba(255, 255, 255, 0.1)',
+                    black: '#21222C',
+                    red: '#FF5555',
+                    green: '#50FA7B',
+                    yellow: '#F1FA8C',
+                    blue: '#BD93F9',
+                    magenta: '#FF79C6',
+                    cyan: '#8BE9FD',
+                    white: '#F8F8F2'
+                },
+                fontFamily: "'Fira Code', 'Courier New', monospace",
+                fontSize: 15,
+                lineHeight: 1.3,
+                fontWeight: 400
+            });
+            const fitAddon = new FitAddon.FitAddon();
+            term.loadAddon(fitAddon);
+            term.open(termDiv);
+
+            term.onData(data => {
+                socket.emit('input', { tabId: tabId, data: data });
+            });
+
+            terminals[tabId] = { term, fitAddon, div: termDiv };
+            return term;
+        }
+
         function doFit() {
             try {
-                fitAddon.fit();
-                socket.emit('resize', { cols: term.cols, rows: term.rows });
+                if (terminals[activeTabId]) {
+                    const { term, fitAddon } = terminals[activeTabId];
+                    fitAddon.fit();
+                    socket.emit('resize', { tabId: activeTabId, size: { cols: term.cols, rows: term.rows } });
+                }
             } catch (e) {
                 console.warn('Fit error:', e);
             }
         }
+        
         setTimeout(doFit, 100);
         window.addEventListener('resize', doFit);
+
+        function switchTab(tabId) {
+            if (!terminals[tabId]) return;
+            activeTabId = tabId;
+            Object.keys(terminals).forEach(id => {
+                terminals[id].div.style.display = (id === tabId) ? 'block' : 'none';
+            });
+            // Don't arbitrarily fetch keys, switch to tab and rely on backend for structure render.
+            // renderTabsList(Object.keys(terminals));
+            setTimeout(doFit, 50);
+            if (terminals[tabId].term) {
+                terminals[tabId].term.focus();
+            }
+        }
+
+        const tabBar = document.getElementById('tab-bar-container');
+        const tabsList = document.getElementById('tabs-list');
+        const addTabBtn = document.getElementById('add-tab-btn');
+        const toggleTabsBtn = document.getElementById('toggle-tabs-btn');
+        const unlockSandboxBtn = document.getElementById('unlock-sandbox-btn');
+        const usersBtn = document.getElementById('users-btn');
+        const usersModal = document.getElementById('users-modal');
+        const closeUsersBtn = document.getElementById('close-users-btn');
+        const usersList = document.getElementById('users-list');
+
+        toggleTabsBtn.addEventListener('click', () => {
+            socket.emit('toggle-tabs');
+        });
+
+        unlockSandboxBtn.addEventListener('click', () => {
+            const isUnlocked = unlockSandboxBtn.classList.contains('unlocked');
+            if (!isUnlocked) {
+                const confirmed = confirm("WARNING: Disabling the directory sandbox gives you unrestricted system-wide server navigation. This can be destructive. Proceed?");
+                if (!confirmed) return;
+            }
+            socket.emit('toggle-sandbox');
+        });
+
+        socket.on('sandbox-sync', (isUnlocked) => {
+            if (isUnlocked) {
+                unlockSandboxBtn.classList.add('unlocked');
+            } else {
+                unlockSandboxBtn.classList.remove('unlocked');
+            }
+        });
+
+        addTabBtn.addEventListener('click', () => {
+            socket.emit('create-tab');
+        });
+
+        usersBtn.addEventListener('click', () => usersModal.classList.remove('hidden'));
+        closeUsersBtn.addEventListener('click', () => usersModal.classList.add('hidden'));
+        usersModal.addEventListener('click', (e) => { if (e.target === usersModal) usersModal.classList.add('hidden'); });
+
+        socket.on('users-sync', (payload) => {
+            const activeUsers = Array.isArray(payload) ? payload : (payload.active || []);
+            const pendingUsers = Array.isArray(payload) ? [] : (payload.pending || []);
+            
+            usersList.innerHTML = '';
+            if (!activeUsers.length && !pendingUsers.length) {
+                usersList.innerHTML = '<div style="padding: 20px; color: #888; text-align: center;">No active clients.</div>';
+                return;
+            }
+
+            pendingUsers.forEach(u => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.style.borderLeft = '3px solid #ffbd2e';
+                const time = new Date(u.connectTime).toLocaleTimeString();
+                item.innerHTML = `
+                    <div class="history-meta" style="flex-direction:row; align-items:center;">
+                        <span style="flex:1"><strong style="color:#ffbd2e">${u.username}</strong> <span style="opacity:0.6">[WAITING]</span></span>
+                        <span style="flex:1; text-align:center;">IP: <strong>${u.ip}</strong></span>
+                        <span style="flex:1; text-align:right;">Attempting: ${time}</span>
+                    </div>`;
+                usersList.appendChild(item);
+            });
+
+            activeUsers.forEach(u => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                const time = new Date(u.connectTime).toLocaleTimeString();
+                item.innerHTML = `
+                    <div class="history-meta" style="flex-direction:row; align-items:center;">
+                        <span style="flex:1"><strong style="color:#BD93F9">${u.username}</strong> <span style="opacity:0.6">[${u.role.toUpperCase()}]</span></span>
+                        <span style="flex:1; text-align:center;">IP: <strong>${u.ip}</strong></span>
+                        <span style="flex:1; text-align:right;">Joined: ${time}</span>
+                    </div>`;
+                usersList.appendChild(item);
+            });
+        });
+
+        function renderTabsList(tabs) {
+            tabsList.innerHTML = '';
+            
+            const validIds = tabs.map(t => typeof t === 'string' ? t : t.id);
+
+            tabs.forEach(tabObj => {
+                const id = typeof tabObj === 'string' ? tabObj : tabObj.id;
+                const titleText = typeof tabObj === 'string' ? tabObj : tabObj.title;
+
+                initTerminal(id);
+                
+                const tabEl = document.createElement('div');
+                tabEl.className = 'terminal-tab';
+                if (id === activeTabId) tabEl.classList.add('active');
+                
+                const title = document.createElement('span');
+                title.innerText = titleText;
+                
+                if (userRole === 'admin') {
+                    title.ondblclick = (e) => {
+                        e.stopPropagation();
+                        // Turn to input
+                        const rawTitle = title.innerText;
+                        title.innerHTML = `<input type="text" style="width: 80px; background: transparent; border: 1px solid #667eea; color: #fff; outline: none; padding: 2px;" value="${rawTitle}">`;
+                        const input = title.querySelector('input');
+                        input.focus();
+                        input.select();
+                        
+                        input.onkeydown = (ev) => {
+                            if (ev.key === 'Enter') {
+                                socket.emit('rename-tab', { tabId: id, newTitle: input.value });
+                                input.blur();
+                            } else if (ev.key === 'Escape') {
+                                title.innerText = rawTitle;
+                            }
+                        };
+                        input.onblur = () => {
+                            if (input.value !== rawTitle) {
+                                socket.emit('rename-tab', { tabId: id, newTitle: input.value });
+                            } else {
+                                title.innerText = rawTitle;
+                            }
+                        };
+                    };
+                }
+
+                tabEl.appendChild(title);
+                
+                if (userRole === 'admin' && id !== 'main') {
+                    const closeBtn = document.createElement('div');
+                    closeBtn.className = 'tab-close';
+                    closeBtn.innerHTML = '&times;';
+                    closeBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        socket.emit('close-tab', id);
+                    };
+                    tabEl.appendChild(closeBtn);
+                }
+                
+                tabEl.onclick = () => switchTab(id);
+                tabsList.appendChild(tabEl);
+            });
+
+            // Cleanup removed tabs in UI
+            Object.keys(terminals).forEach(id => {
+                if (!validIds.includes(id)) {
+                    terminals[id].div.remove();
+                    delete terminals[id];
+                }
+            });
+
+            if (!validIds.includes(activeTabId)) {
+                switchTab('main');
+            }
+        }
+
+        socket.on('tabs-sync', ({ tabsEnabled, tabs }) => {
+            if (tabsEnabled) {
+                tabBar.classList.add('visible');
+                if (userRole === 'admin') addTabBtn.style.display = 'block';
+                else addTabBtn.style.display = 'none';
+            } else {
+                tabBar.classList.remove('visible');
+            }
+            renderTabsList(tabs);
+        });
+
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const pass = passwordInput.value;
             const user = usernameInput.value;
+            
+            let term = terminals['main'] ? terminals['main'].term : initTerminal('main');
             try {
                 term.write('\x1b[36mAuthenticating...\x1b[0m\r\n');
             } catch (e) { }
@@ -511,14 +864,38 @@
             passwordInput.disabled = true;
             usernameInput.disabled = true;
         });
-        socket.on('output', (data) => {
+
+        socket.on('output', (payload) => {
+            let tabId = 'main';
+            let data = payload;
+            if (typeof payload === 'object' && payload.tabId !== undefined) {
+                tabId = payload.tabId;
+                data = payload.data;
+            }
+
+            let termObj = terminals[tabId];
+            if (!termObj) {
+                termObj = { term: initTerminal(tabId) };
+            }
+            const term = termObj.term;
+
             let strData = '';
             try {
                 strData = typeof data === 'string' ? data : new TextDecoder().decode(data);
             } catch (e) {
                 strData = String(data);
             }
+
             if (strData.includes('Connected to shared terminal')) {
+                if (strData.includes('[ADMIN]')) {
+                    userRole = 'admin';
+                    toggleTabsBtn.style.display = 'flex';
+                    unlockSandboxBtn.style.display = 'flex';
+                    usersBtn.style.display = 'flex';
+                } else if (strData.includes('[STANDARD]')) {
+                    userRole = 'standard';
+                }
+
                 modal.style.opacity = '0';
                 modalCard.classList.add('hidden');
                 setTimeout(() => {
@@ -535,14 +912,12 @@
                 setTimeout(() => modalCard.style.transform = 'translateY(0) translateX(5px)', 100);
                 setTimeout(() => modalCard.style.transform = 'translateY(0) translateX(0)', 200);
             }
+            
             try {
                 term.write(data);
             } catch (e) {
                 term.write(strData);
             }
-        });
-        term.onData(data => {
-            socket.emit('input', data);
         });
         socket.on('user-executed', (username) => {
             let logBox = document.getElementById('activity-log');
@@ -610,10 +985,12 @@
             modalCard.classList.remove('hidden');
             passwordInput.disabled = false;
             usernameInput.disabled = false;
-            passwordInput.value = '';
-            
-            term.clear();
-            term.write('\r\n\x1b[31mServer Connection Terminated. Session Expired.\x1b[0m\r\n');
+            Object.values(terminals).forEach(obj => {
+                if (obj.term) {
+                    obj.term.clear();
+                    obj.term.write('\r\n\x1b[31mServer Connection Terminated. Session Expired.\x1b[0m\r\n');
+                }
+            });
         });
     </script>
 </body>

@@ -18,12 +18,27 @@ Tele-Terminal transforms your local command-line interface into a real-time, bro
 
 - **Role-Based Access Control (RBAC):** Supports 3 unique tiers of execution:
   - **Admin:** Has global, unrestricted bypassing rights directly mapped via `config.json`.
-  - **Standard User:** Inherently subjected to strict command blocklists, OS-specific keyword restrictions, and trapped rigidly inside a directory sandbox. Passed dynamically via the TUI.
+  - **Standard User:** Inherently subjected to strict command blocklists, OS-specific keyword restrictions, and trapped rigidly inside a directory sandbox. 
   - **Guest:** Hardcoded view-only mode. Input sequences are completely discarded before hitting the PTY stream. 
-- **Global Directory Sandbox:** Uses intelligent regex payload mapping to permanently lock users into the specific directory where the command was executed, aggressively shredding absolute path manipulation (e.g. `cd C:\`) and parent traversals (e.g. `cd ..`) for all users natively.
-- **Keystroke Application Firewalls:** Keystroke buffer telemetry scans each active buffer context *before* executing `.includes()` logic, intercepting commands like `rm -rf` globally based on what OS the host is currently using. Throws visual front-end toast notifications if trapped.
-- **Manual Host Approval Gatekeeper:** The central CLI natively intercepts connection streams natively using `inquirer`, rendering a giant `Y/n` prompt natively on the host's physical machine giving them true physical override capacities over incoming sessions.
-- **Strict Password Integrity:** Actively rejects configuration settings during server spinup that fail to utilize complex hashing paradigms (8 Chars + Lowercase + Uppercase + Special Character).
+- **Multi-Tab Orchestration:** Admins can spawn multiple independent PTY terminal sessions within the same browser, natively synced to all connected users, and can dynamically rename or close tabs collaboratively.
+- **Global Directory Sandbox:** Intelligent regex maps lock Standard users into their initial connection directory natively. Admins feature a dedicated UI **Sandbox Override** switch to dynamically break out.
+- **Keystroke Application Firewalls:** Keystroke buffer telemetry scans each active buffer context *before* executing commands, intercepting destructive sequences globally based on the host OS. Includes Support for both **Strict Allowlists** and native blocklists.
+- **Advanced Administrator Dashboards:** Real-time user connectivity lists that broadcast standard active users, track native IP metadata, and show highly visible "Pending Connection" status warnings.
+- **Manual Host Approval Gatekeeper:** The central CLI natively intercepts connection streams natively using `inquirer`, rendering a giant `Y/n` prompt natively on the host's physical machine. The web UI seamlessly integrates into this flow by parking connections automatically.
+- **Strict Password Integrity:** Server configuration sequences execute global regex-checks globally mandating Minimum 8 characters with Uppercase, Lowercase, and Special symbols across all accounts.
+- **Fully Responsive Telemetry:** Web viewport structures built strictly with CSS boundaries that adapt intuitively to both mobile devices (bypassing native iOS/Android zoom traps) and vast desktop monitors.
+
+### 📊 Feature Matrix
+
+| Feature | Admin | Standard | Guest |
+|---------|-------|----------|-------|
+| Read Terminal Output | ✅ | ✅ | ✅ |
+| Execute Native Commands | ✅ | ✅ | ❌ |
+| Directory Path Traversal | ✅ (Toggleable) | ❌ Restricted | ❌ |
+| Bypasses Command Blocklist | ✅ | ❌ | ❌ |
+| Manage Multiple Tabs | ✅ | ❌ View Only | ❌ View Only |
+| View Active/Pending Users | ✅ | ❌ | ❌ |
+| Requires Host TUI Approval | Configurable | Configurable | Configurable |
 
 ---
 
