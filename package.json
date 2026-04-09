@@ -1,6 +1,6 @@
 {
   "name": "@pratyush4932/tele-terminal",
-  "version": "2.0.2",
+  "version": "2.1.3",
   "description": "A beautiful cross-os shared terminal over the web",
   "license": "ISC",
   "author": "",
@@ -11,10 +11,8 @@
     "tshare": "./bin/cli.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "publish:all": "npm publish --registry=https://registry.npmjs.org/ --access public && npm publish --registry=https://npm.pkg.github.com/"
   },
   "repository": {
     "type": "git",
